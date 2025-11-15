@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>git-stk - Manage Stacked Pull Requests with Ease</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #0f0f1a;
+            --bg-card: #151521;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --accent: #a78bfa;
+            --accent-hover: #c4b5fd;
+            --accent-light: #ddd6fe;
+            --accent-dark: #7c3aed;
+            --success: #34d399;
+            --success-glow: rgba(52, 211, 153, 0.3);
+            --accent-glow: rgba(167, 139, 250, 0.4);
+            --border: rgba(167, 139, 250, 0.1);
+            --border-strong: rgba(167, 139, 250, 0.2);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(167, 139, 250, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(196, 181, 253, 0.03) 0%, transparent 80%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(167, 139, 250, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(167, 139, 250, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.4;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            padding: 1.5rem 0;
+            backdrop-filter: blur(20px);
+            background: rgba(5, 5, 5, 0.8);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+            letter-spacing: -0.02em;
+        }
+
+        .github-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .github-link:hover {
+            border-color: var(--border-strong);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-1px);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 4rem 0 6rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            pointer-events: none;
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+            50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            padding: 0.25rem 0;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent-light) 40%, var(--accent) 80%, var(--accent-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.04em;
+            line-height: 1.15;
+            text-shadow: 0 0 80px rgba(167, 139, 250, 0.3);
+        }
+
+        .hero-tagline {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            font-weight: 600;
+            line-height: 1.3;
+            letter-spacing: -0.01em;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+
+        /* Install Box */
+        .install-box {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border-strong);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .install-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+
+        .install-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .install-command {
+            background: #000000;
+            border: 1px solid var(--border-strong);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .install-command:hover {
+            border-color: var(--accent);
+        }
+
+        .install-command code {
+            flex: 1;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            font-size: 0.95rem;
+            color: var(--accent-light);
+            user-select: all;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: 0.01em;
+        }
+
+        .copy-btn {
+            padding: 0.6rem 1.25rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px var(--accent-glow);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-btn.copied {
+            background: var(--success);
+            box-shadow: 0 4px 12px var(--success-glow);
+        }
+
+        /* Section Title */
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 2.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        /* Workflow Section */
+        .workflow {
+            padding: 4rem 0;
+            position: relative;
+        }
+
+        .workflow-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .terminal {
+            background: #000000;
+            border: 1px solid var(--border-strong);
+            border-radius: 12px;
+            overflow: hidden;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 0.9rem;
+            box-shadow:
+                0 0 0 1px rgba(167, 139, 250, 0.1),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .terminal-header {
+            background: #1a1a1a;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot:nth-child(1) { background: #ff5f56; }
+        .terminal-dot:nth-child(2) { background: #ffbd2e; }
+        .terminal-dot:nth-child(3) { background: #27c93f; }
+
+        .terminal-body {
+            padding: 1.5rem;
+            overflow-x: auto;
+        }
+
+        .terminal-line {
+            margin-bottom: 0;
+            line-height: 1.4;
+        }
+
+        .terminal-prompt {
+            color: var(--success);
+            user-select: none;
+        }
+
+        .terminal-command {
+            color: var(--accent-light);
+        }
+
+        .terminal-output {
+            color: var(--text-secondary);
+            padding-left: 0;
+        }
+
+        .terminal-comment {
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .workflow-step {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .workflow-step:hover {
+            border-color: var(--border-strong);
+            box-shadow: 0 8px 32px rgba(167, 139, 250, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .workflow-step h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .workflow-step p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 4px 16px var(--accent-glow), 0 0 24px var(--accent-glow);
+            border: 1px solid var(--accent);
+        }
+
+        /* Commands Section */
+        .commands {
+            padding: 4rem 0;
+            position: relative;
+        }
+
+        .commands::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 1400px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
+
+        .commands-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .command-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .command-card:hover {
+            border-color: var(--border-strong);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 24px rgba(167, 139, 250, 0.12);
+        }
+
+        .command-name {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 1.1rem;
+            color: var(--accent);
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .command-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .command-options {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .command-options-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .command-option {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .command-option-desc {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-left: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .command-note {
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 3px solid var(--success);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .command-note strong {
+            color: var(--success);
+        }
+
+        .command-warning {
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            background: rgba(167, 139, 250, 0.1);
+            border-left: 3px solid var(--accent);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .command-warning strong {
+            color: var(--accent);
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 4rem 0;
+            position: relative;
+        }
+
+        .how-it-works::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 1400px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
+
+        .faq-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .faq-item:hover {
+            border-color: var(--border-strong);
+            box-shadow: 0 4px 24px rgba(167, 139, 250, 0.12);
+        }
+
+        details[open].faq-item {
+            border-color: var(--border-strong);
+            box-shadow: 0 4px 24px rgba(167, 139, 250, 0.15);
+        }
+
+        .faq-question {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .faq-question:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .faq-question h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .faq-icon {
+            color: var(--accent);
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+            flex-shrink: 0;
+            margin-left: 1rem;
+        }
+
+        details[open] .faq-icon {
+            transform: rotate(45deg);
+        }
+
+        .faq-answer {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .faq-answer p {
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .faq-answer strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .faq-answer code {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 0.9em;
+            color: var(--accent-light);
+        }
+
+        .faq-answer ul {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .faq-answer li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem 0 3rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        footer a:hover {
+            color: var(--accent-hover);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero h1 {
+                font-size: 3.5rem;
+            }
+
+            .hero-tagline {
+                font-size: 1.3rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 3rem 0 4rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-tagline {
+                font-size: 1.1rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.95rem;
+            }
+
+            .install-box {
+                padding: 1.5rem;
+            }
+
+            .install-command {
+                flex-wrap: wrap;
+            }
+
+            .install-command code {
+                font-size: 0.8rem;
+                flex-basis: 100%;
+                margin-bottom: 0.5rem;
+                white-space: normal;
+                word-break: break-all;
+            }
+
+            .copy-btn {
+                width: 100%;
+            }
+
+            .section-title {
+                font-size: 1.75rem;
+            }
+
+            .explanation {
+                padding: 1.5rem;
+            }
+
+            .terminal-body {
+                padding: 1rem;
+                font-size: 0.8rem;
+            }
+
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">git-stk</a>
+                <a href="https://github.com/derdaele/git-stk" class="github-link" target="_blank">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                    View on GitHub
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>git-stk</h1>
+                    <p class="hero-tagline">One commit, one PR. Ship faster with stacked changes.</p>
+                    <p class="hero-subtitle">Break down large features into reviewable chunks. Each commit becomes its own PR, stacked on the previous one.</p>
+
+                    <div class="install-box">
+                        <div class="install-content">
+                            <div class="install-command">
+                                <code id="install-cmd">curl -fsSL https://raw.githubusercontent.com/derdaele/git-stk/main/install.sh | bash</code>
+                                <button class="copy-btn" onclick="copyInstallCommand()">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="workflow">
+            <div class="container">
+                <div class="workflow-grid">
+                    <div class="workflow-step">
+                        <div class="step-number">1</div>
+                        <h3>Create Your Stack</h3>
+                        <p>Create a feature branch and make commits. Each commit is a logical unit that will become a PR.</p>
+                        <div class="terminal">
+                            <div class="terminal-header">
+                                <div class="terminal-dot"></div>
+                                <div class="terminal-dot"></div>
+                                <div class="terminal-dot"></div>
+                            </div>
+                            <div class="terminal-body">
+                                <div class="terminal-line">
+                                    <span class="terminal-prompt">$</span> <span class="terminal-command">git switch -c my-feature-branch</span>
+                                </div>
+                                <div class="terminal-line">
+                                    <span class="terminal-prompt">$</span> <span class="terminal-command">git commit -m "feat: add user model"</span>
+                                </div>
+                                <div class="terminal-line">
+                                    <span class="terminal-prompt">$</span> <span class="terminal-command">git commit -m "feat: add auth endpoints"</span>
+                                </div>
+                                <div class="terminal-line">
+                                    <span class="terminal-prompt">$</span> <span class="terminal-command">git commit -m "feat: add login UI"</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="step-number">2</div>
+                        <h3>View Your Stack</h3>
+                        <p>See all commits and their PR status before exporting.</p>
+                        <div class="terminal">
+                            <div class="terminal-header">
+                                <div class="terminal-dot"></div>
+                                <div class="terminal-dot"></div>
+                                <div class="terminal-dot"></div>
+                            </div>
+                            <div class="terminal-body">
+                                <div class="terminal-line">
+                                    <span class="terminal-prompt">$</span> <span class="terminal-command">git stk view</span>
+                                </div>
+                                <div class="terminal-line terminal-output">┌─ main</div>
+                                <div class="terminal-line terminal-output">│</div>
+                                <div class="terminal-line terminal-output">├─<span class="commit">●</span>&nbsp;&nbsp;abc1234&nbsp;&nbsp;<strong>feat: add user model</strong>&nbsp;&nbsp;<span class="note">[?→01]</span></div>
+                                <div class="terminal-line terminal-output">│&nbsp;&nbsp;&lt;PR to be created&gt;</div>
+                                <div class="terminal-line terminal-output">│</div>
+                                <div class="terminal-line terminal-output">├─<span class="commit">●</span>&nbsp;&nbsp;def5678&nbsp;&nbsp;<strong>feat: add auth endpoints</strong>&nbsp;&nbsp;<span class="note">[?→02]</span></div>
+                                <div class="terminal-line terminal-output">│&nbsp;&nbsp;&lt;PR to be created&gt;</div>
+                                <div class="terminal-line terminal-output">│</div>
+                                <div class="terminal-line terminal-output">└─<span class="commit">●</span>&nbsp;&nbsp;ghi9012&nbsp;&nbsp;<strong>feat: add login UI</strong>&nbsp;&nbsp;<span class="note">[?→03]</span></div>
+                                <div class="terminal-line terminal-output">&nbsp;&nbsp;&lt;PR to be created&gt;</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="step-number">3</div>
+                        <h3>Export to GitHub</h3>
+                        <p>Push branches and create PRs for each commit. Each PR depends on the one before it.</p>
+                        <div class="terminal">
+                            <div class="terminal-header">
+                                <div class="terminal-dot"></div>
+                                <div class="terminal-dot"></div>
+                                <div class="terminal-dot"></div>
+                            </div>
+                            <div class="terminal-body">
+                                <div class="terminal-line">
+                                    <span class="terminal-prompt">$</span> <span class="terminal-command">git stk export</span>
+                                </div>
+                                <div class="terminal-line terminal-output">Pushing branches...</div>
+                                <div class="terminal-line terminal-output">  ✓ my-feature-branch--01</div>
+                                <div class="terminal-line terminal-output">  ✓ my-feature-branch--02</div>
+                                <div class="terminal-line terminal-output">  ✓ my-feature-branch--03</div>
+                                <div class="terminal-line terminal-output"></div>
+                                <div class="terminal-line terminal-output">Creating PRs...</div>
+                                <div class="terminal-line terminal-output">  ✓ PR #42: feat: add user model</div>
+                                <div class="terminal-line terminal-output">  ✓ PR #43: feat: add auth endpoints</div>
+                                <div class="terminal-line terminal-output">  ✓ PR #44: feat: add login UI</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="step-number">4</div>
+                        <h3>Update a Commit</h3>
+                        <p>Make changes to a commit in your stack and re-export to update the PR.</p>
+                        <div class="terminal">
+                            <div class="terminal-header">
+                                <div class="terminal-dot"></div>
+                                <div class="terminal-dot"></div>
+                                <div class="terminal-dot"></div>
+                            </div>
+                            <div class="terminal-body">
+                                <div class="terminal-line">
+                                    <span class="terminal-prompt">$</span> <span class="terminal-command">git commit --fixup def5678</span>
+                                </div>
+                                <div class="terminal-line">
+                                    <span class="terminal-prompt">$</span> <span class="terminal-command">git rebase -i --autosquash main</span>
+                                </div>
+                                <div class="terminal-line">
+                                    <span class="terminal-prompt">$</span> <span class="terminal-command">git stk export</span>
+                                </div>
+                                <div class="terminal-line terminal-output">Pushing branches...</div>
+                                <div class="terminal-line terminal-output">  ✓ my-feature-branch--02 (force)</div>
+                                <div class="terminal-line terminal-output">  ✓ my-feature-branch--03 (force)</div>
+                                <div class="terminal-line terminal-output"></div>
+                                <div class="terminal-line terminal-output">Updating PRs...</div>
+                                <div class="terminal-line terminal-output">  ✓ Updated PR #43</div>
+                                <div class="terminal-line terminal-output">  ✓ Updated PR #44</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step">
+                        <div class="step-number">5</div>
+                        <h3>Land a PR</h3>
+                        <p>Merge the bottom PR, wait for completion, pull changes, rebase your stack, and re-export.</p>
+                        <div class="terminal">
+                            <div class="terminal-header">
+                                <div class="terminal-dot"></div>
+                                <div class="terminal-dot"></div>
+                                <div class="terminal-dot"></div>
+                            </div>
+                            <div class="terminal-body">
+                                <div class="terminal-line">
+                                    <span class="terminal-prompt">$</span> <span class="terminal-command">git stk land</span>
+                                </div>
+                                <div class="terminal-line terminal-output">Merging PR #42...</div>
+                                <div class="terminal-line terminal-output">  ✓ Merge initiated</div>
+                                <div class="terminal-line terminal-output"></div>
+                                <div class="terminal-line terminal-output">Waiting for merge to complete...</div>
+                                <div class="terminal-line terminal-output">  ✓ PR merged successfully!</div>
+                                <div class="terminal-line terminal-output"></div>
+                                <div class="terminal-line terminal-output">Pulling latest changes...</div>
+                                <div class="terminal-line terminal-output">  ✓ Updated main</div>
+                                <div class="terminal-line terminal-output"></div>
+                                <div class="terminal-line terminal-output">Rebasing stack...</div>
+                                <div class="terminal-line terminal-output">  ✓ Rebased 2 commits on main</div>
+                                <div class="terminal-line terminal-output"></div>
+                                <div class="terminal-line terminal-output">Re-exporting...</div>
+                                <div class="terminal-line terminal-output">  ✓ Updated PR #43</div>
+                                <div class="terminal-line terminal-output">  ✓ Updated PR #44</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="commands">
+            <div class="container">
+                <h2 class="section-title">Commands</h2>
+                <div class="commands-grid">
+                    <div class="command-card">
+                        <div class="command-name">git stk view</div>
+                        <div class="command-desc">View the current stack of commits and their PR status. Shows a tree structure with commit SHAs, messages, slots, and PR links.</div>
+                        <div class="command-note">
+                            <strong>Safe to run:</strong> This command is read-only and never modifies your repository or remote state.
+                        </div>
+                    </div>
+
+                    <div class="command-card">
+                        <div class="command-name">git stk export</div>
+                        <div class="command-desc">Export the stack to GitHub by creating/updating branches and PRs for each commit in your stack.</div>
+                        <div class="command-options">
+                            <div class="command-options-title">Options</div>
+                            <div class="command-option">--draft</div>
+                            <div class="command-option-desc">Create PRs as drafts</div>
+                            <div class="command-option">--ready</div>
+                            <div class="command-option-desc">Mark PRs as ready for review</div>
+                            <div class="command-option">--open</div>
+                            <div class="command-option-desc">Open created/updated PRs in browser</div>
+                            <div class="command-option">--dry-run</div>
+                            <div class="command-option-desc">Show what would be done without making changes</div>
+                        </div>
+                    </div>
+
+                    <div class="command-card">
+                        <div class="command-name">git stk land</div>
+                        <div class="command-desc">Merge the bottom PR in the stack, wait for merge completion, pull latest changes, rebase remaining commits, and re-export the stack.</div>
+                        <div class="command-options">
+                            <div class="command-options-title">Options</div>
+                            <div class="command-option">--skip-wait</div>
+                            <div class="command-option-desc">Don't wait for merge to complete</div>
+                        </div>
+                    </div>
+
+                    <div class="command-card">
+                        <div class="command-name">git stk landed</div>
+                        <div class="command-desc">Run post-merge operations after a PR has been manually merged outside of git-stk. Pulls changes, rebases, and re-exports.</div>
+                    </div>
+
+                    <div class="command-card">
+                        <div class="command-name">git stk set slot &lt;commit&gt; &lt;slot&gt;</div>
+                        <div class="command-desc">Manually assign a custom slot to a commit. The commit can be a SHA, stack index (1, 2, 3), or git ref (HEAD, branch name).</div>
+                        <div class="command-warning">
+                            <strong>Warning:</strong> If the commit already has a slot with an exported PR, changing the slot will close the existing PR and create a new one on the next export. This is because the head ref (branch name) in a GitHub PR is set at creation time and cannot be changed.
+                        </div>
+                        <div class="command-options">
+                            <div class="command-options-title">Options</div>
+                            <div class="command-option">-y, --yes</div>
+                            <div class="command-option-desc">Skip confirmation prompts</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="how-it-works">
+            <div class="container">
+                <h2 class="section-title">How It Works</h2>
+                <div class="faq-container">
+                    <details class="faq-item">
+                        <summary class="faq-question">
+                            <h3>What are Slots?</h3>
+                            <span class="faq-icon">+</span>
+                        </summary>
+                        <div class="faq-answer">
+                            <p>
+                                Slots are unique identifiers for commits that determine their branch names on GitHub. Each commit in your stack gets a slot, which is combined with your branch name to create the remote branch.
+                            </p>
+                            <p>
+                                <strong>Auto-assigned slots:</strong> By default, git stk automatically assigns sequential numeric slots (01, 02, 03...) to your commits when you export.
+                            </p>
+                            <p>
+                                <strong>Custom slots:</strong> You can assign custom string slots for better organization and clarity:
+                            </p>
+                            <ul>
+                                <li>Link to issue trackers: <code>PROJ-123</code>, <code>LINEAR-456</code></li>
+                                <li>Descriptive names: <code>add-auth</code>, <code>fix-validation</code></li>
+                                <li>Any alphanumeric string with hyphens and underscores</li>
+                            </ul>
+                            <p>
+                                The branch name format is: <code>{your-branch}--{slot}</code>
+                            </p>
+                            <div class="terminal">
+                                <div class="terminal-header">
+                                    <div class="terminal-dot"></div>
+                                    <div class="terminal-dot"></div>
+                                    <div class="terminal-dot"></div>
+                                </div>
+                                <div class="terminal-body">
+                                    <div class="terminal-line terminal-comment"># Assign a custom slot</div>
+                                    <div class="terminal-line">
+                                        <span class="terminal-prompt">$</span> <span class="terminal-command">git stk set slot abc1234 PROJ-123</span>
+                                    </div>
+                                    <div class="terminal-line">
+                                        <span class="terminal-prompt">$</span> <span class="terminal-command">git stk export</span>
+                                    </div>
+                                    <div class="terminal-line terminal-output">  ✓ my-feature--PROJ-123</div>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary class="faq-question">
+                            <h3>Where are the commit metadata stored?</h3>
+                            <span class="faq-icon">+</span>
+                        </summary>
+                        <div class="faq-answer">
+                            <p>
+                                All commit metadata (PR numbers, slots, etc.) are stored in <strong>git notes</strong> attached to each commit. Git notes are a built-in Git feature that allows you to attach arbitrary data to commits without modifying the commits themselves.
+                            </p>
+                            <p>
+                                <strong>Key benefits:</strong>
+                            </p>
+                            <ul>
+                                <li><strong>Survive rebases:</strong> Git notes are automatically carried along when commits are rebased, ensuring your PR links stay intact</li>
+                                <li><strong>Persist locally:</strong> Metadata is stored in your local repository, not in commit messages</li>
+                                <li><strong>History-safe:</strong> Amending commits or interactive rebasing preserves the notes</li>
+                            </ul>
+                            <p>
+                                You can view the raw notes using Git's built-in commands:
+                            </p>
+                            <div class="terminal">
+                                <div class="terminal-header">
+                                    <div class="terminal-dot"></div>
+                                    <div class="terminal-dot"></div>
+                                    <div class="terminal-dot"></div>
+                                </div>
+                                <div class="terminal-body">
+                                    <div class="terminal-line">
+                                        <span class="terminal-prompt">$</span> <span class="terminal-command">git notes --ref=refs/notes/git-stk show &lt;commit&gt;</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary class="faq-question">
+                            <h3>What happens if I squash commits together?</h3>
+                            <span class="faq-icon">+</span>
+                        </summary>
+                        <div class="faq-answer">
+                            <p>
+                                When you squash multiple commits together (e.g., using <code>git rebase -i</code>), git stk handles the metadata as follows:
+                            </p>
+                            <p>
+                                <strong>Metadata preservation:</strong> The metadata (slot and PR number) from the <strong>earliest commit</strong> in the squash is preserved on the resulting squashed commit. This ensures continuity for the primary PR.
+                            </p>
+                            <p>
+                                <strong>Existing PRs:</strong> If any of the squashed commits had their own PRs, those PRs will become stale and need to be manually closed. Git stk currently does not automatically detect or close these PRs since the commits no longer exist individually.
+                            </p>
+                            <p>
+                                <strong>Best practice:</strong> After squashing, run <code>git stk view</code> to review your stack state and manually close any orphaned PRs on GitHub.
+                            </p>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>
+                Made with ❤️ by <a href="https://github.com/derdaele" target="_blank">derdaele</a>
+                | <a href="https://github.com/derdaele/git-stk" target="_blank">GitHub</a>
+                | <a href="https://github.com/derdaele/git-stk/issues" target="_blank">Report an Issue</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        function copyInstallCommand() {
+            const cmd = document.getElementById('install-cmd').textContent;
+            navigator.clipboard.writeText(cmd).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
